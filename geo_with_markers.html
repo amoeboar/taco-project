@@ -1,0 +1,182 @@
+<!-- 
+>> Need to run a local server. In Terminal, cd to directory and type:
+python -m SimpleHTTPServer 8000
+
+>> Then, in browser:
+http://localhost:8000/geolocation_test.html
+
+>> Reference:
+http://stackoverflow.com/questions/5423938/html-5-geo-location-prompt-in-chrome
+ -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geolocation</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <div data-role="header" data-position="fixed">
+         <h1>Taco Trek</h1>
+
+        <button id="locate">Find me!</button>
+        <button id="food">Find Food!</button>
+        <button id="hotel">Find Hotels!</button>
+        <button id="store">Find Stores!</button>
+
+    </div>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+
+    <script>
+    // Note: This example requires that you consent to location sharing when
+    // prompted by your browser. If you see a blank space instead of the map, this
+    // is probably because you have denied permission for location sharing.
+
+    var map;
+    var pos;
+    var service;
+
+    function createMarker(place) {
+      var marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location,
+      });
+
+      // To add the marker to the map, call setMap();
+      marker.setMap(map);
+    }
+
+    function callback(results, status) {
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      for (var i = 0; i < results.length; i++) {
+        var place = results[i];
+        createMarker(results[i]);
+        console.log(results[i]);
+        }
+      }
+    };
+
+    function createMarker(x) {
+      var marker = new google.maps.Marker({
+          position: x.geometry.location,
+          title: "Hello World!"
+      });
+
+      // To add the marker to the map, call setMap();
+      marker.setMap(map);
+    }
+
+    function initialize() {
+      map = new google.maps.Map(document.getElementById('map-canvas'), {
+        zoom: 5,
+        center: new google.maps.LatLng(39.8111444,-98.5569364)
+      });
+    };
+
+    function setLocation() {
+      // Try HTML5 geolocation
+      if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+        
+        pos = new google.maps.LatLng(position.coords.latitude, 
+          position.coords.longitude);
+
+        var infowindow = new google.maps.InfoWindow({
+          map: map,
+          position: pos,
+          content: 'You are here!'
+        });
+
+          map.setCenter(pos);
+          map.setZoom(16);
+        }, function() {
+          handleNoGeolocation(true);
+        });
+      } else {
+        // Browser doesn't support Geolocation
+        handleNoGeolocation(false);
+      }
+
+      var request = {
+      };
+
+      service = new google.maps.places.PlacesService(map);
+      service.nearbySearch(request, callback);
+    };
+
+    function findFood(pos) {
+      var request = {
+        location: pos,
+        radius: '200',
+        types: ['food']
+      };
+
+      service.nearbySearch(request, callback);
+    };
+
+    function findStore() {
+      alert("You found stores!");
+    };
+
+    function findHotel() {
+      alert("You found hotels!");
+    };
+
+
+    function handleNoGeolocation(errorFlag) {
+      if (errorFlag) {
+        var content = 'Oh man, we lost you.';
+      } else {
+        var content = 'Your browser doesn\'t support geolocation.';
+      }
+
+      // Get lost in Russia
+      var options = {
+        map: map,
+        position: new google.maps.LatLng(60, 105),
+        content: content
+      };
+
+      var infowindow = new google.maps.InfoWindow(options);
+      map.setCenter(options.position);
+    };
+
+    google.maps.event.addDomListener(window, 'load', initialize);
+
+    // Sliders go here
+    // Sample request
+    //     var request = {
+    //     location: pyrmont,
+    //     radius: '500',
+    //     types: ['store']
+    // };
+
+    $(document).ready(function () {
+      $("#locate").click(function () {
+        setLocation();
+      });
+      $("#food").click(function () {
+        findFood();
+      });
+      $("#hotel").click(function () {
+        findHotel();
+      });
+      $("#store").click(function () {
+        findStore();
+      });
+    });
+
+    </script>
+  </head>
+
+  <body>
+    <div id="map-canvas"></div>
+  </body>
+</html>
