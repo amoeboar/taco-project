@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Taco Trek</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4pZUVCxBDNyzMVlMYQo69tWl-tVjfiD8">
+    </script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css"></script>
+  </head>
+  <body>
+    <div>
+      <div data-role="page" id="p1">
+          <div data-role="header" data-position="fixed">
+               <h1>Taco Trek</h1>
+              <button id="loc">Find me!</button>
+          </div>
+          <div data-role="content" class="">
+              <>
+          </div>
+          <div data-role="footer" data-position="fixed" class="row-fluid">
+              <div id="slider-cost" class="slider span4">Cost</div>
+              <div id="slider-start" class="slider span4">Start Time</div>
+              <div id="slider-duration" class="slider span4">Duration (in hours)</div>
+          </div>
+      </div>
+      <div id="map-canvas"></div>
+  </body>
+      <script type="text/javascript">
+      var map;
+      var service;
+      //geolocate
+      function setLocation() {
+          if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(showPosition);
+          }
+      }
+      //plot position
+      function showPosition(position) {
+          x = new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
+          map.setCenter(x);
+          var request = {
+              location: x,
+              radius: '200',
+              types: ['food']
+          };
+
+          service.nearbySearch(request, callback);
+      }
+
+      function createMarker(x) {
+          var marker = new google.maps.Marker({
+              position: x.geometry.location,
+              title: "Hello World!"
+          });
+
+          // To add the marker to the map, call setMap();
+          marker.setMap(map);
+      }
+
+      function callback(results, status) {
+          if (status == google.maps.places.PlacesServiceStatus.OK) {
+              for (var i = 0; i < results.length; i++) {
+                  var place = results[i];
+                  createMarker(results[i]);
+                  console.log(results[i]);
+              }
+          }
+      }
+
+      function initialize() {
+          var sfFinDist = new google.maps.LatLng(37.8, -122.4);
+
+          map = new google.maps.Map(document.getElementById('map-canvas'), {
+              center: sfFinDist,
+              zoom: 15
+          });
+
+          var request = {
+              location: sfFinDist,
+              radius: '500',
+              types: ['store']
+          };
+
+          service = new google.maps.places.PlacesService(map);
+          service.nearbySearch(request, callback);
+      }
+
+      google.maps.event.addDomListener(window, 'load', initialize);
+
+      $(document).ready(function () {
+          $("#loc").click(function () {
+              setLocation();
+          });
+          
+          $( "#slider-cost" ).slider({
+            value:2,
+            min: 0,
+            max: 4,
+            step: 4,
+            slide: function( event, ui ) {
+                  console.log("$" + ui.value );
+            }
+          });
+          
+          $( "#slider-start" ).slider({
+            value:25,
+            min: 0,
+            max: 50,
+            step: 5,
+            slide: function( event, ui ) {
+                  console.log("S" + ui.value );
+            }
+          });
+          
+          $( "#slider-duration" ).slider({
+            value:30,
+            min: 0,
+            max: 50,
+            step: 5,
+            slide: function( event, ui ) {
+                  console.log("D" + ui.value );
+            }
+          });
+        
+      });
+    </script>
+</html>]
