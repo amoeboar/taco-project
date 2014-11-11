@@ -1,22 +1,23 @@
 var map;
 var pos;
-var poly;
 var infowindow;
-var flightPath;
 var markers = [];
+var latarray = [];
+var directionsDisplay;
+var directionsService;
+var map;
 
 function setLocation() {
-  
+  directionsDisplay = new google.maps.DirectionsRenderer();
+  directionsService = new google.maps.DirectionsService();
   map = new google.maps.Map(document.getElementById('map-canvas'));
+  // poly = new google.maps.Polyline({
+  //   strokeColor: '#000000',
+  //   strokeOpacity: 1.0,
+  //   strokeWeight: 3
+  // });
 
-  var polyOptions = {
-    strokeColor: '#000000',
-    strokeOpacity: 1.0,
-    strokeWeight: 3
-  };
-
-  poly = new google.maps.Polyline(polyOptions);
-  poly.setMap(map);
+  directionsDisplay.setMap(map);
 
   // Try HTML5 geolocation
   if(navigator.geolocation) {
@@ -65,19 +66,10 @@ function createMarker(place) {
   });
 };
 
-// Sets the map on all markers in the array.
-function setAllMap(map) {
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(map);
-  }
-};
-
 // Removes the markers from the map, but keeps them in the array.
 function clearMarkers() {
-  setAllMap(null);
-  if (flightPath != null) {
-    flightPath.setMap(null);
-    markers = [];
+  for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(null);
   }
 };
 
@@ -93,22 +85,36 @@ function find(type, radius, pos) {
   service.nearbySearch(request, callback);
 };
 
-function makePath(markers) {
-  var latarray = [];
+function calcRoute(markers, pos) {
+  clearMarkers();
 
   for (var i = 0; i < markers.length; i++) {
-    latarray.push(markers[i].position);
-  }
-  flightPath = new google.maps.Polyline({
-    path: latarray,
-    geodesic: true,
-    strokeColor: '#FF0000',
-    strokeOpacity: 1.0,
-    strokeWeight: 2
-  });
+    latarray.push({
+        location: new google.maps.LatLng(markers[i].position.k, markers[i].position.B),
+        stopover: true
+      });
+    }
+  var waypts = latarray.slice(0, latarray.length < 8 ? latarray.length : 8);
 
-  flightPath.setMap(map);
-};
+  // var start = pos;
+  // var end = latarray[latarray.length-1];
+  var start = new google.maps.LatLng(pos.k, pos.B);
+  var end = new google.maps.LatLng(37.7749295,-122.4194);
+  var request = {
+      origin:start,
+      destination:end,
+      waypoints: waypts,
+      optimizeWaypoints: true,
+      travelMode: google.maps.TravelMode.WALKING
+  };
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    } else {
+      console.log("Routing did not work.");
+    }
+  });
+}
 
 function handleNoGeolocation(errorFlag) {
   if (errorFlag) {
@@ -161,6 +167,6 @@ $(document).ready(function () {
     find("park", 500, pos);
   });
   $("#path").click(function () {
-    makePath(markers);
+    calcRoute(markers, pos);
   });
 });
